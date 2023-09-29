@@ -614,7 +614,7 @@ class Wall(Obstacle):
 
 
 class GraphicEnvironment(XYEnvironment):
-    def __init__(self, width=10, height=10, boundary=True, color={}, display=False):
+    def __init__(self, width=100, height=100, boundary=True, color={}, display=False):
         """Define all the usual XYEnvironment characteristics,
         but initialise a BlockGrid for GUI too."""
         super().__init__(width, height)

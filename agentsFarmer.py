@@ -203,6 +203,10 @@ def RandomVacuumAgent():
     >>> environment.status == {(1,0):'Clean' , (0,0) : 'Clean'}
     True
     """
+    
+    #Randomly choose one of the actions from the vacuum environment.
+
+    #True
     return Agent(RandomAgentProgram(['Right', 'Left', 'Suck', 'NoOp']))
 
 
@@ -226,6 +230,13 @@ def TableDrivenVacuumAgent():
              ((loc_A, 'Dirty'), (loc_A, 'Clean'), (loc_B, 'Dirty')): 'Suck',
              ((loc_B, 'Dirty'), (loc_B, 'Clean'), (loc_A, 'Dirty')): 'Suck'}
     return Agent(TableDrivenAgentProgram(table))
+
+
+    agent = ModelBasedVacuumAgent()
+    environment = TrivialVacuumEnvironment()
+    environment.add_thing(agent)
+    environment.run()
+    environment.status == {(1,0):'Clean' , (0,0) : 'Clean'}
 
 
 def ReflexVacuumAgent():
@@ -1067,4 +1078,36 @@ __doc__ += """
 >>> e.add_thing(ModelBasedVacuumAgent())
 >>> e.run(5)
 
+
+agent = RandomVacuumAgent()
+environment = TrivialVacuumEnvironment()
+environment.add_thing(agent)
+environment.run()
+environment.status == {(1,0):'Clean' , (0,0) : 'Clean'}
+
+environment.list_things_at(loc_A) == [agent]
+environment.list_things_at(loc_B) == []
+environment.list_things_at((0,0)) == [agent]
+environment.list_things_at((1,0)) == []
+
 """
+
+# d = Direction('up')
+# l1 = d.move_forward((0, 0))
+# l1
+# #(0, -1)
+# d = Direction(Direction.R)
+# l1 = d.move_forward((0, 0))
+# l1
+# #(1,0)
+
+
+# #An agent that chooses an action at random, ignoring all percepts.
+# list = ['Right', 'Left', 'Suck', 'NoOp']
+# program = RandomAgentProgram(list)
+# agent = Agent(program)
+# environment = TrivialVacuumEnvironment()
+# environment.add_thing(agent)
+# environment.run()
+# environment.status == {(1, 0): 'Clean' , (0, 0): 'Clean'}
+# #True
