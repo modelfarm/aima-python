@@ -36,7 +36,8 @@ class Chicken(Agent):
         else:
             self.location = 1
         print("Chicken moved to location {}.".format(self.location))
-    def eat(self, thing):
+    def eatFeed(self, thing):
+        print(self)
         print("Chicken eat at {}.".format(self.location))
 
 
@@ -48,8 +49,8 @@ class Fox(Agent):
         else:
             self.location = 1
         print("Fox moved to location {}.".format(self.location))
-    def eat(self, thing):
-        print("Fox eat at {}.".format(self.location))
+    def eatChicken(self):
+        print('Fox eat a Chicken at location {}.'.format(self.location))
 
 
 class Feed(Thing):
@@ -58,67 +59,45 @@ class Feed(Thing):
 
 
 class Farm(Environment):
+    
     def percept(self, agent):
         '''return a list of things that are in our agent's location'''
         things = self.list_things_at(agent.location)
         return things
     
     def execute_action(self, agent, action):
-        '''changes the state of the environment based on what the agent does.'''
-        # if action == "move":
-        #     print('{} decided to {} from location: {}'.format(str(agent)[1:-1], action, agent.location))
-        #     agent.move()
-        #     agent.performance += 1
-        # elif action == "grabChicken":
-        #     items = self.list_things_at(agent.location)
-        #     if len(items) != 0:
-        #         if agent.grabChicken(items[0]):
-        #             print('{} grabbed {} from location: {}'
-        #                   .format(str(agent)[1:-1], str(items[0])[1:-1], agent.location))
-        #             agent.grabChicken()
-        #             agent.move()
-        #             agent.performance += 1
-        ItemMoveA=list(self.state[Loc_A])
-        ItemMoveB=list(self.state[Loc_B])
-        ItemToMove=action.split()[-1]
-        if action == "Right with " + ItemToMove:
-            agemt.location = loc_A
-            ItemMoveA.remove(ItemToMove)
-            ItemMoveB.append(ItemToMove)
-        if action == "eat":
-            items = self.list_things_at(agent.location)
+
+        if action == "eatChicken":
+            items = self.list_things_at(agent.location, tclass=Fox)
+            #print(str(agent.eatChicken))
             if len(items) != 0:
-            #if agent.eat(items[0]):
-                #print(f'  This is items[0]: {items[0]}')
-                print('{} eat {} from location: {}'
-                      .format(str(agent)[1:-1], str(items[0])[1:-1], agent.location))
-                #self.delete_thing((items[0])[1:-1])
                 # print(f'  This is str(agent)[1:-1]: {str(agent)[1:-1]}')
                 # print(f'  This is str(items[0])[1:-1]: {str(items[0])[1:-1]}')
-                # print(f'  This is str(items[0]): {str(items[0])}')
-                #self.agent.eat()
-                agent.performance += 1
-        # elif action == "eatChicken":
-        #     items = self.list_things_at(agent.location, tclass=Fox)
-        #     if len(items) != 0:
-        #         if agent.eatChicken(items[0]):
-        #             print('{} eat {} from location: {}'
-        #                   .format(str(agent)[1:-1], str(items[0])[1:-1], agent.location))
-        #             self.delete_thing(things[0])
-        #             self.agent.eatChicken()
-        #             self.agent.performance -= 10
-        # elif action == "eatFeed":
-        #     items = self.list_things_at(agent.location, tclass=Chicken)
-        #     if len(items) != 0:
-        #         if agent.eatFeed(items[0]):
-        #             print('{} eat {} from location: {}'
-        #                   .format(str(agent)[1:-1], str(items[0])[1:-1], agent.location))
-        #             self.delete_thing(things[0])
-        #             agent.eatFeed()
-        #             agent.move()
-        #             agent.performance -= 10
-                    
-        #elif action != 'NoOp':
+                if str(items[0])[1:-1] != str(agent)[1:-1]:
+                    #if agent.eatChicken:
+                    print('{} eat {} from location: {}'
+                          .format(str(agent)[1:-1], str(items[0])[1:-1], agent.location))
+                    # print(f'  This is str(agent)[1:-1]: {str(agent)[1:-1]}')
+                    # print(f'  This is str(items[0])[1:-1]: {str(items[0])[1:-1]}')
+                    # print(f'  This is str(items[0]): {str(items[0])}')
+                    #self.delete_thing()
+                    self.agent.eatChicken()
+                    #self.agent.performance -= 10
+
+
+        if action == "eatFeed":
+            items = self.list_things_at(agent.location, tclass=Chicken)
+            #print(str(agent.eatChicken))
+            if len(items) != 0:
+                # print(f'  This is str(agent)[1:-1]: {str(agent)[1:-1]}')
+                # print(f'  This is str(items[0])[1:-1]: {str(items[0])[1:-1]}')
+                if str(items[0])[1:-1] != str(agent)[1:-1]:
+                    #if agent.eatChicken:
+                    print('{} eat {} from location: {}'
+                          .format(str(agent)[1:-1], str(items[0])[1:-1], agent.location))
+                    self.agent.eatFeed()
+
+
             
          #   agent.performance -= 0
         #             agent.location = 2
@@ -217,9 +196,9 @@ class Farm(Environment):
 loc_A, loc_B = 1, 2
 
 
-farmerActions = ['grabChicken', 'grabFox', 'grabFeed', 'move']#, 'eat']
-chickenActions = ['eat', 'move']
-foxActions = ['eat', 'move']
+farmerActions = ['grabChicken', 'grabFox', 'grabFeed', 'move', 'eat']
+chickenActions = ['eatFeed', 'move']
+foxActions = ['eatChicken', 'move']
 #list = ['grabChicken']
 #lambda percept: random.choice(list)
 #test = random.choice(list)
@@ -239,7 +218,7 @@ farm = Farm()
 farm.add_thing(farmer,1)
 farm.add_thing(chicken,1)
 farm.add_thing(fox,1)
-farm.add_thing(feed,1)
+#farm.add_thing(feed,1)
 
 items1 = farm.list_things_at(1)
 items2 = farm.list_things_at(2)
@@ -250,7 +229,7 @@ print(f'\n\nFarmer Score before run: {scoreBeforeRunFarmer} \n\n')
 
 #chicken.grabFox(fox)
 #print(farm.things)
-farm.run(20)
+farm.run()
 
 items0 = farm.list_things_at(0)
 items1 = farm.list_things_at(1)
@@ -273,23 +252,3 @@ print(farm.is_done())
     # >>> environment.run()
 
 
-def TableDrivenVacuumAgent():
-    """Tabular approach towards vacuum world as mentioned in [Figure 2.3]
-    >>> agent = TableDrivenVacuumAgent()
-    >>> environment = TrivialVacuumEnvironment()
-    >>> environment.add_thing(agent)
-    >>> environment.run()
-    >>> environment.status == {(1,0):'Clean' , (0,0) : 'Clean'}
-    True
-    """
-    table = {((loc_A, 'Chicken','Fox','Feed'),): 'Right with Chicken',
-              ((loc_A, 'Dirty'),): 'Suck',
-              ((loc_B, 'Clean'),): 'Left',
-              ((loc_B, 'Dirty'),): 'Suck',
-              ((loc_A, 'Dirty'), (loc_A, 'Clean')): 'Right',
-              ((loc_A, 'Clean'), (loc_B, 'Dirty')): 'Suck',
-              ((loc_B, 'Clean'), (loc_A, 'Dirty')): 'Suck',
-              ((loc_B, 'Dirty'), (loc_B, 'Clean')): 'Left',
-              ((loc_A, 'Dirty'), (loc_A, 'Clean'), (loc_B, 'Dirty')): 'Suck',
-              ((loc_B, 'Dirty'), (loc_B, 'Clean'), (loc_A, 'Dirty')): 'Suck'}
-    return Agent(TableDrivenAgentProgram(table))

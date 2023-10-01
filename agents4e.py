@@ -155,6 +155,7 @@ def RandomAgentProgram(actions):
 # ______________________________________________________________________________
 
 
+
 def SimpleReflexAgentProgram(rules, interpret_input):
     """
     [Figure 2.10]
@@ -510,11 +511,11 @@ class XYEnvironment(Environment):
             agent.direction += Direction.L
         elif action == 'Forward':
             agent.bump = self.move_to(agent, agent.direction.move_forward(agent.location))
-        #         elif action == 'Grab':
-        #             things = [thing for thing in self.list_things_at(agent.location)
-        #                     if agent.can_grab(thing)]
-        #             if things:
-        #                 agent.holding.append(things[0])
+        elif action == 'Grab':
+            things = [thing for thing in self.list_things_at(agent.location)
+                    if agent.can_grab(thing)]
+            if things:
+                agent.holding.append(things[0])
         elif action == 'Release':
             if agent.holding:
                 agent.holding.pop()
@@ -777,8 +778,8 @@ class TrivialVacuumEnvironment(Environment):
 
     def __init__(self):
         super().__init__()
-        self.status = {loc_A: random.choice(['Clean', 'Dirty']),
-                       loc_B: random.choice(['Clean', 'Dirty'])}
+        self.status = {loc_A: random.choice(['Dirty', 'Dirty']),
+                       loc_B: random.choice(['Dirty', 'Dirty'])}
 
     def thing_classes(self):
         return [Wall, Dirt, ReflexVacuumAgent, RandomVacuumAgent, TableDrivenVacuumAgent, ModelBasedVacuumAgent]
@@ -805,7 +806,11 @@ class TrivialVacuumEnvironment(Environment):
         """Agents start in either location at random."""
         return random.choice([loc_A, loc_B])
 
-
+    def score(self,agent):
+        # agent = AgentFactory()
+        # env.add_thing(agent)
+        # env.run(steps)
+        return agent.performance
 # ______________________________________________________________________________
 # The Wumpus World
 
@@ -1087,3 +1092,19 @@ __doc__ += """
 >>> e.run(5)
 
 """
+
+list = ['Right', 'Left', 'Suck', 'NoOp']
+program = RandomAgentProgram(list)
+farmer = Agent(program)
+environment = TrivialVacuumEnvironment()
+environment.add_thing(farmer)
+
+environment.status == {(1, 0): 'Dirty' , (0, 0): 'Dirty'}
+environment.status == {(1,0):'Clean' , (0,0) : 'Clean'}
+environment.score(farmer)
+
+environment.run()
+
+environment.status == {(1, 0): 'Dirty' , (0, 0): 'Dirty'}
+environment.status == {(1,0):'Clean' , (0,0) : 'Clean'}
+environment.score(farmer)
