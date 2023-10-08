@@ -1,3 +1,5 @@
+# working
+
 import os,sys,inspect
 
 current_dir = os.path.dirname(os.path.abspath(
@@ -12,10 +14,14 @@ import random
 # AGENT CLASSES
 ########################################
 # Agent Class - Fire brigade Agent - Model
-class ModelFireman(Agent):
+class Fireman(Agent):
     location = [0,0]           
-    Name = 'ModelFireman'
-    Agent.isHoldingWater = False
+    Name = 'Fireman'
+    isHoldingWater = False
+    
+    def can_grab(self, thing):
+        """Fireman can only grab water"""
+        return thing.__class__ == Water
     
     def takeWater(self, thing):
         '''returns True upon success or False otherwise'''
@@ -60,7 +66,7 @@ def randomMotions():
             pass
         elif choice == 'U':
             pass
-    print('Move' + choice)
+    #print('Move' + choice)
     return ('Move' + choice)
 
 
@@ -77,12 +83,21 @@ class Fire(Thing):
     Name='Fire'
     pass
 
+class Obstacle(Thing):
+    """Something that can cause a bump, preventing an agent from
+    moving into the same square it's in."""
+    pass
+
+class Wall(Obstacle):
+    pass
 
 ########################################
 # ENVIRONMENT CLASS
 ########################################
 # Forrest Class
+#class Forrest2D(XYEnvironment):
 class Forrest2D(GraphicEnvironment):
+    
     def percept(self, agent):
         listThings = []
         for things in self.list_things_at(agent.location):
@@ -92,9 +107,12 @@ class Forrest2D(GraphicEnvironment):
         return agent.location, listThings
      
     
-    # def thing_classes(self):
-    #     return [Fire, Water, ModelFireman]
+    def thing_classes(self):
+        return [Fire, Water, Fireman, Wall]
+    
+    
     def execute_action(self, agent, action):
+
         if action == 'Take Water':
             items = self.list_things_at(agent.location, tclass=Water)
             if len(items) != 0:
@@ -106,8 +124,8 @@ class Forrest2D(GraphicEnvironment):
         elif action == 'Estinguish Fire':
             items = self.list_things_at(agent.location, tclass=Fire)
             if len(items) != 0:                  
-                if agent.estinguishFire(items[0]) and agent.isHoldingWater:
-                    agent.performance += 100
+                if agent.estinguishFire(items[0]):
+                    agent.performance += 100 if Water in agent.holding else -100
                     self.delete_thing(items[0])
                     agent.isHoldingWater = False
                     print('Estinguish Fire')
@@ -116,30 +134,32 @@ class Forrest2D(GraphicEnvironment):
                     print('Burning, no water')
                     
         if model[tuple(agent.location)] == 'Visited':
+            #self.colors = (50,50,50)
             agent.performance -= 10
-                    
-        motions = randomMotions()
         
+        #print(self.colors[self.default_location])
+                  
+        motions = randomMotions()       
         if motions == 'MoveR':
             if agent.location[0]>=0 and agent.location[0]< 5:
                 agent.location[0]+=1
                 agent.performance -= 1
-                #print('R here we go')       
+                print('Move Right')       
         elif motions == 'MoveL':
             if agent.location[0]>0 and agent.location[0]<=5:
                 agent.location[0]-=1
                 agent.performance -= 1
-                #print('L here we go')         
+                print('Move Left')         
         elif motions == 'MoveU':
             if agent.location[1]>=0 and agent.location[1]<5:
                 agent.location[1]+=1
                 agent.performance -= 1
-                #print('U here we go')               
+                print('Move UP')               
         elif motions == 'MoveD':
             if agent.location[1]>0 and agent.location[1]<=5:
                 agent.location[1]-=1
-                agent.performance -= 1             
-                #print('D here we go') 
+                agent.performance -= 1        
+                print('Move Down') 
 
             
         print(model[tuple(agent.location)])
@@ -156,17 +176,22 @@ collections.Sequence = collections.abc.Sequence
  
    
 model = {(x, y): None for x in range(6) for y in range(6)}
-forrest = Forrest2D(6,6, color={'ModelFireman': (230, 115, 40), 'Water': (0, 200, 200), 'Fire': (200,0,0)})
+forrest = Forrest2D(6,6, color={'Fireman': (230, 115, 40), 'Water': (0, 200, 200), 'Fire': (200,0,0), 'Visited': (50,50,50), 'Walls': (50,50,50)})
 
-fireman = ModelFireman(programAgent)
+fireman = Fireman(programAgent)
 fire = Fire()
 water = Water()
 
+
+
+
 forrest.add_thing(fireman, [2,1])
 forrest.add_thing(water, [3,4])
-forrest.add_thing(fire, [1,5])   
+#forrest.add_thing(Water(), forrest.random_location_inbounds(exclude=(3, 4)))
+forrest.add_thing(fire, [1,5])
+#forrest.add_thing(Fire(), forrest.random_location_inbounds(exclude=(1, 5)))
 
-forrest.run(60,delay=0.1)
+forrest.run(100,delay=0.05)
 
 print(f'Fireman performance: {fireman.performance} and is holding water: {fireman.isHoldingWater}')
 
