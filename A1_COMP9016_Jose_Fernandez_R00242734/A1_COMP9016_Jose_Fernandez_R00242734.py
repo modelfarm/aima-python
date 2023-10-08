@@ -49,6 +49,7 @@ def programAgent(percept):
     if not isinstance(model[tuple(location)],(Water,Fire)):
         model[tuple(location)] = 'Visited'
 
+def randomMotions():
     choice = random.choice(('L','R','D','U'))
     if  choice !=0:
         if choice == 'L':
@@ -59,9 +60,9 @@ def programAgent(percept):
             pass
         elif choice == 'U':
             pass
-    return 'Move' + choice
+    print('Move' + choice)
+    return ('Move' + choice)
 
-    #return programAgent#, model
 
 ########################################
 # THING CLASSES
@@ -89,32 +90,12 @@ class Forrest2D(GraphicEnvironment):
                 listThings.append(things)   
         """By default, agent perceives things within a default radius."""
         return agent.location, listThings
+     
     
-    def thing_classes(self):
-        return [Fire, Water, ModelFireman]
-
+    # def thing_classes(self):
+    #     return [Fire, Water, ModelFireman]
     def execute_action(self, agent, action):
-        if action == 'MoveR':
-            if agent.location[0]>=0 and agent.location[0]< 5:
-                agent.location[0]+=1
-                agent.performance -= 1
-                #print('R here we go')       
-        elif action == 'MoveL':
-            if agent.location[0]>0 and agent.location[0]<=5:
-                agent.location[0]-=1
-                agent.performance -= 1
-                #print('L here we go')         
-        elif action == 'MoveU':
-            if agent.location[1]>=0 and agent.location[1]<5:
-                agent.location[1]+=1
-                agent.performance -= 1
-                #print('U here we go')               
-        elif action == 'MoveD':
-            if agent.location[1]>0 and agent.location[1]<=5:
-                agent.location[1]-=1
-                agent.performance -= 1             
-                #print('D here we go') 
-        elif action == 'Take Water':
+        if action == 'Take Water':
             items = self.list_things_at(agent.location, tclass=Water)
             if len(items) != 0:
                 if agent.takeWater(items[0]): 
@@ -136,6 +117,30 @@ class Forrest2D(GraphicEnvironment):
                     
         if model[tuple(agent.location)] == 'Visited':
             agent.performance -= 10
+                    
+        motions = randomMotions()
+        
+        if motions == 'MoveR':
+            if agent.location[0]>=0 and agent.location[0]< 5:
+                agent.location[0]+=1
+                agent.performance -= 1
+                #print('R here we go')       
+        elif motions == 'MoveL':
+            if agent.location[0]>0 and agent.location[0]<=5:
+                agent.location[0]-=1
+                agent.performance -= 1
+                #print('L here we go')         
+        elif motions == 'MoveU':
+            if agent.location[1]>=0 and agent.location[1]<5:
+                agent.location[1]+=1
+                agent.performance -= 1
+                #print('U here we go')               
+        elif motions == 'MoveD':
+            if agent.location[1]>0 and agent.location[1]<=5:
+                agent.location[1]-=1
+                agent.performance -= 1             
+                #print('D here we go') 
+
             
         print(model[tuple(agent.location)])
         print(agent.location)
@@ -157,12 +162,12 @@ fireman = ModelFireman(programAgent)
 fire = Fire()
 water = Water()
 
-forrest.add_thing(fireman, [3,3])
+forrest.add_thing(fireman, [2,1])
 forrest.add_thing(water, [3,4])
-forrest.add_thing(fire, [3,5])   
+forrest.add_thing(fire, [1,5])   
 
-forrest.run(30,delay=0.1)
+forrest.run(60,delay=0.1)
 
-print(f'Fireman perfrmance: {fireman.performance} and is holding water: {fireman.isHoldingWater}')
+print(f'Fireman performance: {fireman.performance} and is holding water: {fireman.isHoldingWater}')
 
 print(model)
