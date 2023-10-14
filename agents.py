@@ -607,6 +607,7 @@ class Obstacle(Thing):
 
 
 class Wall(Obstacle):
+    Name = 'Wall'
     pass
 
 
@@ -640,22 +641,21 @@ class GraphicEnvironment(XYEnvironment):
             result.append(row)
         return result
 
-    """
-    def run(self, steps=1000, delay=1):
-        "" "Run the Environment for given number of time steps,
-        but update the GUI too." ""
-        for step in range(steps):
-            sleep(delay)
-            if self.visible:
-                self.reveal()
-            if self.is_done():
-                if self.visible:
-                    self.reveal()
-                return
-            self.step()
-        if self.visible:
-            self.reveal()
-    """
+
+    # def run(self, steps=1000, delay=1):
+    #     "" "Run the Environment for given number of time steps, but update the GUI too."""
+    #     for step in range(steps):
+    #         sleep(delay)
+    #         if self.visible:
+    #             self.reveal()
+    #         if self.is_done():
+    #             if self.visible:
+    #                 self.reveal()
+    #             return
+    #         self.step()
+    #     if self.visible:
+    #         self.reveal()
+
 
     def run(self, steps=1000, delay=1):
         """Run the Environment for given number of time steps,
@@ -678,7 +678,7 @@ class GraphicEnvironment(XYEnvironment):
         # wait for the world to update and
         # apply changes to the same grid instead
         # of making a new one.
-        clear_output(1)
+        clear_output(0.05)
         self.grid.show()
         self.visible = True
 

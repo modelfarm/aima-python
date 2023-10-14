@@ -1,103 +1,47 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Sep 24 10:56:35 2023
+Created on Mon Oct  9 17:44:44 2023
 
 @author: josel
 """
 
-import pygame
-import random
+class Agent:
+    def __init__(self):
+        self.position = (0, 0)
+        self.knowledge = {}  # Knowledge representation
 
-# Define colors
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
+    def perceive(self, environment):
+        # Agent perceives its current location
+        self.knowledge['current_location'] = self.position
 
-# Define grid dimensions and cell size
-GRID_SIZE = 2
-CELL_SIZE = 100
+    def act(self, environment):
+        # Simple movement towards a goal
+        goal = (3, 3)  # The agent's goal is to reach position (3, 3)
+        x, y = self.position
+        if x < goal[0]:
+            x += 1
+        elif x > goal[0]:
+            x -= 1
+        elif y < goal[1]:
+            y += 1
+        elif y > goal[1]:
+            y -= 1
+        self.position = (x, y)
 
 class Environment:
     def __init__(self):
-        # Initialize a 2x2 grid with random dirt distribution
-        self.grid = [[random.choice(['clean', 'dirty']) for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
-        self.agent_location = (0, 0)
+        self.grid_size = (5, 5)
 
-    def is_dirty(self, x, y):
-        return self.grid[x][y] == 'dirty'
+    def is_goal_reached(self, agent):
+        return agent.position == (3, 3)
 
-    def clean(self, x, y):
-        self.grid[x][y] = 'clean'
+if __name__ == "__main__":
+    agent = Agent()
+    environment = Environment()
 
-    def percept(self):
-        x, y = self.agent_location
-        return self.is_dirty(x, y)
+    while not environment.is_goal_reached(agent):
+        agent.perceive(environment)
+        print(f"Agent's knowledge: {agent.knowledge}")
+        agent.act(environment)
 
-    def step(self, action):
-        x, y = self.agent_location
-        if action == 'clean':
-            self.clean(x, y)
-        elif action == 'move_right':
-            if y < GRID_SIZE - 1:
-                self.agent_location = (x, y + 1)
-        elif action == 'move_down':
-            if x < GRID_SIZE - 1:
-                self.agent_location = (x + 1, y)
-
-class VacuumCleanerAgent:
-    def __init__(self):
-        self.actions = ['clean', 'move_right', 'move_down']
-        self.current_action = 0
-
-    def choose_action(self, percept):
-        if percept == 'dirty':
-            return 'clean'
-        else:
-            return self.actions[self.current_action]
-
-    def update_action(self):
-        self.current_action = (self.current_action + 1) % len(self.actions)
-
-# Initialize Pygame
-pygame.init()
-
-# Create a window
-window_size = (GRID_SIZE * CELL_SIZE, GRID_SIZE * CELL_SIZE)
-screen = pygame.display.set_mode(window_size)
-pygame.display.set_caption("Vacuum Cleaner Agent")
-
-# Create a clock to control the frame rate
-clock = pygame.time.Clock()
-
-# Create instances of the environment and agent
-env = Environment()
-agent = VacuumCleanerAgent()
-
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-
-    percept = env.percept()
-    action = agent.choose_action(percept)
-    env.step(action)
-    agent.update_action()
-
-    # Clear the screen
-    screen.fill(WHITE)
-
-    # Draw the grid
-    for x in range(GRID_SIZE):
-        for y in range(GRID_SIZE):
-            rect = pygame.Rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
-            if env.is_dirty(x, y):
-                pygame.draw.rect(screen, BLACK, rect)
-            pygame.draw.rect(screen, WHITE, rect, 1)
-
-    # Update the display
-    pygame.display.flip()
-
-    # Limit the frame rate
-    clock.tick(2)
-
-pygame.quit()
+    print("Agent reached the goal!")
