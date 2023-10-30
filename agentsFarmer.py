@@ -27,14 +27,9 @@ EnvCanvas ## Canvas to display the environment of an EnvGUI
 """
 
 # TODO
-# Implement grabbing correctly.
-# When an object is grabbed, does it still have a location?
-# What if it is released?
-# What if the grabbed or the grabber is deleted?
-# What if the grabber moves?
 # Speed control in GUI does not have any effect -- fix it.
 
-from utils4e import distance_squared, turn_heading
+from utils import distance_squared, turn_heading
 from statistics import mean
 from ipythonblocks import BlockGrid
 from IPython.display import HTML, display, clear_output
@@ -72,17 +67,17 @@ class Thing:
 
 
 class Agent(Thing):
-    """An Agent is a subclass of Thing with one required slot,
-    .program, which should hold a function that takes one argument, the
-    percept, and returns an action. (What counts as a percept or action
+    """An Agent is a subclass of Thing with one required instance attribute 
+    (aka slot), .program, which should hold a function that takes one argument,
+    the percept, and returns an action. (What counts as a percept or action 
     will depend on the specific environment in which the agent exists.)
-    Note that 'program' is a slot, not a method. If it were a method,
-    then the program could 'cheat' and look at aspects of the agent.
-    It's not supposed to do that: the program can only look at the
-    percepts. An agent program that needs a model of the world (and of
-    the agent itself) will have to build and maintain its own model.
-    There is an optional slot, .performance, which is a number giving
-    the performance measure of the agent in its environment."""
+    Note that 'program' is a slot, not a method. If it were a method, then the
+    program could 'cheat' and look at aspects of the agent. It's not supposed
+    to do that: the program can only look at the percepts. An agent program
+    that needs a model of the world (and of the agent itself) will have to
+    build and maintain its own model. There is an optional slot, .performance,
+    which is a number giving the performance measure of the agent in its
+    environment."""
 
     def __init__(self, program=None):
         self.alive = True
@@ -155,7 +150,6 @@ def RandomAgentProgram(actions):
 # ______________________________________________________________________________
 
 
-
 def SimpleReflexAgentProgram(rules, interpret_input):
     """
     [Figure 2.10]
@@ -171,14 +165,14 @@ def SimpleReflexAgentProgram(rules, interpret_input):
     return program
 
 
-def ModelBasedReflexAgentProgram(rules, update_state, transition_model, sensor_model):
+def ModelBasedReflexAgentProgram(rules, update_state, model):
     """
     [Figure 2.12]
     This agent takes action based on the percept and state.
     """
 
     def program(percept):
-        program.state = update_state(program.state, program.action, percept, transition_model, sensor_model)
+        program.state = update_state(program.state, program.action, percept, model)
         rule = rule_match(program.state, rules)
         action = rule.action
         return action
@@ -209,6 +203,10 @@ def RandomVacuumAgent():
     >>> environment.status == {(1,0):'Clean' , (0,0) : 'Clean'}
     True
     """
+    
+    #Randomly choose one of the actions from the vacuum environment.
+
+    #True
     return Agent(RandomAgentProgram(['Right', 'Left', 'Suck', 'NoOp']))
 
 
@@ -232,6 +230,13 @@ def TableDrivenVacuumAgent():
              ((loc_A, 'Dirty'), (loc_A, 'Clean'), (loc_B, 'Dirty')): 'Suck',
              ((loc_B, 'Dirty'), (loc_B, 'Clean'), (loc_A, 'Dirty')): 'Suck'}
     return Agent(TableDrivenAgentProgram(table))
+
+
+    agent = ModelBasedVacuumAgent()
+    environment = TrivialVacuumEnvironment()
+    environment.add_thing(agent)
+    environment.run()
+    environment.status == {(1,0):'Clean' , (0,0) : 'Clean'}
 
 
 def ReflexVacuumAgent():
@@ -512,13 +517,16 @@ class XYEnvironment(Environment):
         elif action == 'Forward':
             agent.bump = self.move_to(agent, agent.direction.move_forward(agent.location))
         elif action == 'Grab':
-            things = [thing for thing in self.list_things_at(agent.location)
-                    if agent.can_grab(thing)]
-            if things:
+            things = [thing for thing in self.list_things_at(agent.location) if agent.can_grab(thing)]
+            if things:    
                 agent.holding.append(things[0])
+                print("Grabbing ", things[0].__class__.__name__)
+                self.delete_thing(things[0])
         elif action == 'Release':
             if agent.holding:
-                agent.holding.pop()
+                dropped = agent.holding.pop()
+                print("Dropping ", dropped.__class__.__name__)
+                self.add_thing(dropped, location=agent.location)
 
     def default_location(self, thing):
         location = self.random_location_inbounds()
@@ -570,10 +578,7 @@ class XYEnvironment(Environment):
     def delete_thing(self, thing):
         """Deletes thing, and everything it is holding (if thing is an agent)"""
         if isinstance(thing, Agent):
-            for obj in thing.holding:
-                super().delete_thing(obj)
-                for obs in self.observers:
-                    obs.thing_deleted(obj)
+            del thing.holding
 
         super().delete_thing(thing)
         for obs in self.observers:
@@ -778,8 +783,8 @@ class TrivialVacuumEnvironment(Environment):
 
     def __init__(self):
         super().__init__()
-        self.status = {loc_A: random.choice(['Dirty', 'Dirty']),
-                       loc_B: random.choice(['Dirty', 'Dirty'])}
+        self.status = {loc_A: random.choice(['Clean', 'Dirty']),
+                       loc_B: random.choice(['Clean', 'Dirty'])}
 
     def thing_classes(self):
         return [Wall, Dirt, ReflexVacuumAgent, RandomVacuumAgent, TableDrivenVacuumAgent, ModelBasedVacuumAgent]
@@ -806,11 +811,7 @@ class TrivialVacuumEnvironment(Environment):
         """Agents start in either location at random."""
         return random.choice([loc_A, loc_B])
 
-    def score(self,agent):
-        # agent = AgentFactory()
-        # env.add_thing(agent)
-        # env.run(steps)
-        return agent.performance
+
 # ______________________________________________________________________________
 # The Wumpus World
 
@@ -969,24 +970,10 @@ class WumpusEnvironment(XYEnvironment):
 
         if isinstance(agent, Explorer) and self.in_danger(agent):
             return
-
+            
         agent.bump = False
-        if action == 'TurnRight':
-            agent.direction += Direction.R
-            agent.performance -= 1
-        elif action == 'TurnLeft':
-            agent.direction += Direction.L
-            agent.performance -= 1
-        elif action == 'Forward':
-            agent.bump = self.move_to(agent, agent.direction.move_forward(agent.location))
-            agent.performance -= 1
-        elif action == 'Grab':
-            things = [thing for thing in self.list_things_at(agent.location)
-                      if agent.can_grab(thing)]
-            if len(things):
-                print("Grabbing", things[0].__class__.__name__)
-                if len(things):
-                    agent.holding.append(things[0])
+        if action in ['TurnRight', 'TurnLeft', 'Forward', 'Grab']:
+            super().execute_action(agent, action)
             agent.performance -= 1
         elif action == 'Climb':
             if agent.location == (1, 1):  # Agent can only climb out of (1,1)
@@ -1091,20 +1078,36 @@ __doc__ += """
 >>> e.add_thing(ModelBasedVacuumAgent())
 >>> e.run(5)
 
+
+agent = RandomVacuumAgent()
+environment = TrivialVacuumEnvironment()
+environment.add_thing(agent)
+environment.run()
+environment.status == {(1,0):'Clean' , (0,0) : 'Clean'}
+
+environment.list_things_at(loc_A) == [agent]
+environment.list_things_at(loc_B) == []
+environment.list_things_at((0,0)) == [agent]
+environment.list_things_at((1,0)) == []
+
 """
 
-list = ['Right', 'Left', 'Suck', 'NoOp']
-program = RandomAgentProgram(list)
-farmer = Agent(program)
-environment = TrivialVacuumEnvironment()
-environment.add_thing(farmer)
+# d = Direction('up')
+# l1 = d.move_forward((0, 0))
+# l1
+# #(0, -1)
+# d = Direction(Direction.R)
+# l1 = d.move_forward((0, 0))
+# l1
+# #(1,0)
 
-environment.status == {(1, 0): 'Dirty' , (0, 0): 'Dirty'}
-environment.status == {(1,0):'Clean' , (0,0) : 'Clean'}
-environment.score(farmer)
 
-environment.run()
-
-environment.status == {(1, 0): 'Dirty' , (0, 0): 'Dirty'}
-environment.status == {(1,0):'Clean' , (0,0) : 'Clean'}
-environment.score(farmer)
+# #An agent that chooses an action at random, ignoring all percepts.
+# list = ['Right', 'Left', 'Suck', 'NoOp']
+# program = RandomAgentProgram(list)
+# agent = Agent(program)
+# environment = TrivialVacuumEnvironment()
+# environment.add_thing(agent)
+# environment.run()
+# environment.status == {(1, 0): 'Clean' , (0, 0): 'Clean'}
+# #True
